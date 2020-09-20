@@ -1,0 +1,29 @@
+import cv2
+import pytesseract
+
+# Read the image
+image = cv2.imread('image.png')
+
+# Image is stored in BGR (Blue Green Red)
+# Converting image to garyscale
+# USing convert color command from opencv
+gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Next step is to detect edges using canny edge detection
+# Using canny command from opencv
+canny_image = cv2.Canny(gray_image,170,200)
+# Second and third parameters are threshold values of edges to be defined
+
+# Then identify the contours(closed outlines) based on the edges
+# Using find contours command
+contours, new = cv2.findContours(canny_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+# First parameter is source image
+# Second parameter is contour retrieval mode
+# Third parameter is contour approximation method
+
+# Next, we sort the contour images
+contours = sorted(contours, key = cv2.contourArea, reverse = True)[:30]
+# Defining size as 30 will remove all small contours(noise) from consideration
+
+
+
