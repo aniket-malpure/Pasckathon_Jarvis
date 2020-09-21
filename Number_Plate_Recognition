@@ -2,7 +2,7 @@ import cv2
 import pytesseract
 
 # Read the image
-image = cv2.imread('image.png')
+image = cv2.imread('')
 
 # Image is stored in BGR (Blue Green Red)
 # Converting image to garyscale
@@ -22,8 +22,39 @@ contours, new = cv2.findContours(canny_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SI
 # Third parameter is contour approximation method
 
 # Next, we sort the contour images
-contours = sorted(contours, key = cv2.contourArea, reverse = True)[:30]
+contours = sorted(contours, key=cv2.contourArea, reverse=True)[:30]
 # Defining size as 30 will remove all small contours(noise) from consideration
+
+# Initialize license plate contour
+contour_with_license_plate = None    # Contour of license plate
+license_plate = None     # Region of interest (ROI) ie., image if license plate
+x = None    # Initial x coordinate
+y = None    # Initial y coordinate
+w = None    # Width of license plate
+h = None    # Height of license plate
+
+# Looping through all the contours which are identified
+# Finding the contour with 4 potential corners and create ROI around it
+for contour in contours:
+    # Finding perimeter of contour and it should be a closed contour
+    perimeter = cv2.arcLength(contour, closed=True)
+    # Approximately considering exact shapes(polygon) contours
+    approx = cv2.approxPolyDP(contour, epsilon=0.01*perimeter, closed=True)
+    # In this, second argument is called epsilon, which is maximum distance from contour to approximated contour. It is an accuracy parameter.
+    if len(approx) == 4:      # Check whether the sides of contour is equal to 4
+        contour_with_license_plate = approx   # Setting license plate image
+        x,y,w,h  =cv2.boundingRect(contour)    # Setting coordinates and width-height of contour in image
+        license_plate = gray_image[y:y+h, x:x+w]   # Using above values marking the license plate in grayscale image
+        break
+
+# Removing noise from the detected image, before sending to Tesseract
+
+
+
+
+
+
+
 
 
 
