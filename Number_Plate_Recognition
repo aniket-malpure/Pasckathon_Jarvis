@@ -4,26 +4,7 @@ import pytesseract
 # Read the image
 image = cv2.imread('')
 
-# Image is stored in BGR (Blue Green Red)
-# Converting image to garyscale
-# USing convert color command from opencv
-gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-# Next step is to detect edges using canny edge detection
-# Using canny command from opencv
-canny_image = cv2.Canny(gray_image,170,200)
-# Second and third parameters are threshold values of edges to be defined
-
-# Then identify the contours(closed outlines) based on the edges
-# Using find contours command
-contours, new = cv2.findContours(canny_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-# First parameter is source image
-# Second parameter is contour retrieval mode
-# Third parameter is contour approximation method
-
-# Next, we sort the contour images
-contours = sorted(contours, key=cv2.contourArea, reverse=True)[:30]
-# Defining size as 30 will remove all small contours(noise) from consideration
+cap = cv2.VideoCapture("Resources/Mercedes Cars Road Trip.mp4")  # Video as an input
 
 # Initialize license plate contour
 contour_with_license_plate = None    # Contour of license plate
@@ -33,40 +14,69 @@ y = None    # Initial y coordinate
 w = None    # Width of license plate
 h = None    # Height of license plate
 
-# Looping through all the contours which are identified
-# Finding the contour with 4 potential corners and create ROI around it
-for contour in contours:
-    # Finding perimeter of contour and it should be a closed contour
-    perimeter = cv2.arcLength(contour, closed=True)
-    # Approximately considering exact shapes(polygon) contours
-    approx = cv2.approxPolyDP(contour, epsilon=0.01*perimeter, closed=True)
-    # In this, second argument is called epsilon, which is maximum distance from contour to approximated contour. It is an accuracy parameter.
-    if len(approx) == 4:      # Check whether the sides of contour is equal to 4
-        contour_with_license_plate = approx   # Setting license plate image
-        x,y,w,h  =cv2.boundingRect(contour)    # Setting coordinates and width-height of contour in image
-        license_plate = gray_image[y:y+h, x:x+w]   # Using above values marking the license plate in grayscale image
-        break
+while True:    # As video is sequence of images loop is used to display each frame
+    success, image = cap.read()  # Img saves image in it and success is Boolean which shows the process was completed or not
 
-# Removing noise from the detected image, before sending to Tesseract
-license_plate = cv2.bilateralFilter(license_plate,d=11, sigmaColor=17, sigmaSpace=17)
-# The Bilateral filter is a nonlinear filter that reduces noise and smooth an image while preserving edge structures
-(thresh, license_plate) = cv2.threshold(license_plate, thresh=150, maxval=180, type = cv2.THRESH_BINARY)
-# Above sets threshold values for colours of text, background, etc
+    # Image is stored in BGR (Blue Green Red)
+    # Converting image to garyscale
+    # USing convert color command from opencv
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# Text Recognition
-text = pytesseract.image_to_string(license_plate)
-# Converts text into a string of alphanumeric values
+    # Next step is to detect edges using canny edge detection
+    # Using canny command from opencv
+    canny_image = cv2.Canny(gray_image,170,200)
+    # Second and third parameters are threshold values of edges to be defined
 
-# Draw License plate and write the text
-image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 3)
-# This creates a rectangle around the license plate with defined colour
-image = cv2.putText(image, text, (x-100, y-50), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,255,0), 6, cv2.LINE_AA)
-# Inputs the text obtained into the rectangle created above
+    # Then identify the contours(closed outlines) based on the edges
+    # Using find contours command
+    contours, new = cv2.findContours(canny_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    # First parameter is source image
+    # Second parameter is contour retrieval mode
+    # Third parameter is contour approximation method
 
-print("License Plate: ",text)
+    # Next, we sort the contour images
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:30]
+    # Defining size as 30 will remove all small contours(noise) from consideration
 
-cv2.imshow("License plate detection", image)
-cv2.waitKey(0)
+    # Looping through all the contours which are identified
+    # Finding the contour with 4 potential corners and create ROI around it
+    for contour in contours:
+        # Finding perimeter of contour and it should be a closed contour
+        perimeter = cv2.arcLength(contour, closed=True)
+        # Approximately considering exact shapes(polygon) contours
+        approx = cv2.approxPolyDP(contour, epsilon=0.01*perimeter, closed=True)
+        # In this, second argument is called epsilon, which is maximum distance from contour to approximated contour. It is an accuracy parameter.
+        if len(approx) == 4:      # Check whether the sides of contour is equal to 4
+            contour_with_license_plate = approx   # Setting license plate image
+            x,y,w,h  =cv2.boundingRect(contour)    # Setting coordinates and width-height of contour in image
+            license_plate = gray_image[y:y+h, x:x+w]   # Using above values marking the license plate in grayscale image
+            break
+
+    # Removing noise from the detected image, before sending to Tesseract
+    license_plate = cv2.bilateralFilter(license_plate,d=11, sigmaColor=17, sigmaSpace=17)
+    # The Bilateral filter is a nonlinear filter that reduces noise and smooth an image while preserving edge structures
+    (thresh, license_plate) = cv2.threshold(license_plate, thresh=150, maxval=180, type = cv2.THRESH_BINARY)
+    # Above sets threshold values for colours of text, background, etc
+
+    # Text Recognition
+    text = pytesseract.image_to_string(license_plate)
+    # Converts text into a string of alphanumeric values
+
+    # Draw License plate and write the text
+    image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 3)
+    # This creates a rectangle around the license plate with defined colour
+    image = cv2.putText(image, text, (x-100, y-50), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,255,0), 6, cv2.LINE_AA)
+    # Inputs the text obtained into the rectangle created above
+
+    print("License Plate: ",text)
+
+    cv2.imshow("License plate detection", image)
+    cv2.waitKey(0)
+
+
+
+
+
 
 
 
