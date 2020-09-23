@@ -1,8 +1,10 @@
 import cv2
 import pytesseract
+from PIL import Image
 
-# Read the image
-image = cv2.imread('')
+pytesseract.pytesseract.tesseract_cmd = r'C:\Users\HP\AppData\Local\Tesseract-OCR\tesseract.exe'
+
+car_number = str(input("Enter the car number: "));
 
 cap = cv2.VideoCapture("Resources/Mercedes Cars Road Trip.mp4")  # Video as an input
 
@@ -16,6 +18,9 @@ h = None    # Height of license plate
 
 while True:    # As video is sequence of images loop is used to display each frame
     success, image = cap.read()  # Img saves image in it and success is Boolean which shows the process was completed or not
+
+# Read the image
+#image = cv2.imread('Resources/car0.jpg')
 
     # Image is stored in BGR (Blue Green Red)
     # Converting image to garyscale
@@ -55,23 +60,28 @@ while True:    # As video is sequence of images loop is used to display each fra
     # Removing noise from the detected image, before sending to Tesseract
     license_plate = cv2.bilateralFilter(license_plate,d=11, sigmaColor=17, sigmaSpace=17)
     # The Bilateral filter is a nonlinear filter that reduces noise and smooth an image while preserving edge structures
-    (thresh, license_plate) = cv2.threshold(license_plate, thresh=150, maxval=180, type = cv2.THRESH_BINARY)
+    (thresh, license_plate) = cv2.threshold(license_plate, thresh=150, maxval=180, type=cv2.THRESH_BINARY)
     # Above sets threshold values for colours of text, background, etc
 
+    #cv2.imshow('license_plate_image',license_plate)
+    cv2.imwrite('license_plate_image.jpg',license_plate)
+    #cv2.waitKey(0)
+
     # Text Recognition
-    text = pytesseract.image_to_string(license_plate)
+    text = pytesseract.image_to_string(Image.open('license_plate_image.jpg'), lang='eng', config='--psm 6')
     # Converts text into a string of alphanumeric values
 
-    # Draw License plate and write the text
-    image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 3)
-    # This creates a rectangle around the license plate with defined colour
-    image = cv2.putText(image, text, (x-100, y-50), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,255,0), 6, cv2.LINE_AA)
-    # Inputs the text obtained into the rectangle created above
+    if text == car_number + '\n':    # Entering the number plate which we required
+        cv2.imshow('license_plate_image', license_plate)
+        cv2.waitKey(0)
+        print("Car Found")
+        print("License Plate: ",text)
+        break
 
-    print("License Plate: ",text)
 
-    cv2.imshow("License plate detection", image)
-    cv2.waitKey(0)
+
+
+
 
 
 
